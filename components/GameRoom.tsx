@@ -1,389 +1,211 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Room, Player } from '../types/game'
-import { Copy, Crown, Users, DollarSign, Coins } from 'lucide-react'
+import React, { useEffect, useState } from "react";
+import { Room, Player } from "../types/game";
+import { Copy, Crown, Users, DollarSign, Coins } from "lucide-react";
 
-/**
- * Props for the GameRoom component
- */
 interface GameRoomProps {
-  /** Current room state */
   readonly room: Room;
-  /** Current player information */
   readonly currentPlayer: Player;
-  /** Callback to start the game (deprecated - auto-game flow) */
   readonly onStartGame: () => void;
-  /** Callback to flip the coin (deprecated - auto-game flow) */
   readonly onFlipCoin: () => void;
-  /** Callback to leave the room */
   readonly onLeaveRoom: () => void;
 }
 
-/**
- * GameRoom component for displaying the active game state
- * Shows players, game status, coin animation, and controls
- */
 export default function GameRoom({
   room,
   currentPlayer,
-  onStartGame: _onStartGame, // Fallback manual trigger (unused)
-  onFlipCoin: _onFlipCoin, // Deprecated
-  onLeaveRoom
+  onStartGame: _onStartGame,
+  onFlipCoin: _onFlipCoin,
+  onLeaveRoom,
 }: GameRoomProps): React.JSX.Element {
-  const [isFlipping, setIsFlipping] = useState<boolean>(false)
+  const [isFlipping, setIsFlipping] = useState<boolean>(false);
 
-  useEffect((): (() => void) | void => {
-    if (room.status === 'flipping') {
-      setIsFlipping(true)
-      // Animation duration
-      const timer = setTimeout(() => {
-        setIsFlipping(false)
-      }, 2000)
-      return (): void => clearTimeout(timer)
-    }
-    // Explicit return for when condition is not met
-    return undefined
-  }, [room.status])
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const isWaiting = room.status === 'waiting'
-  const isFinished = room.status === 'completed'
-
-  // Players are identified by the logic below, no need for separate creator/joiner variables
-
-  // FIXED: Use backend player data to determine current player identity
-  // Match by name first (most reliable), then by side as fallback
-  const currentPlayerName = currentPlayer.name
-  const currentPlayerSide = currentPlayer.side || currentPlayer.choice
-
-  let actualCurrentPlayer: Player | null = null
-  let isCreator = false
-  let otherPlayer: Player | null = null
-
-  if (room.players && room.players.length > 0) {
-    // Try to find current player by name first
-    if (currentPlayerName) {
-      actualCurrentPlayer = room.players.find(p => p.name === currentPlayerName) || null
+    if (room.status === "flipping") {
+      setIsFlipping(true);
+      timer = setTimeout(() => setIsFlipping(false), 2000);
+    } else {
+      setIsFlipping(false);
     }
 
-    // If not found by name, try by side (fallback)
-    if (!actualCurrentPlayer) {
-      actualCurrentPlayer = room.players.find(p => p.side === currentPlayerSide) || null
-    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [room.status]);
 
-    // If still not found, use the first player (should not happen)
-    if (!actualCurrentPlayer) {
-      actualCurrentPlayer = room.players[0] || null
-    }
+  const isWaiting: boolean = room.status === "waiting";
+  const isFinished: boolean = room.status === "completed";
 
-    // Determine if current player is creator based on backend data
-    isCreator = actualCurrentPlayer?.is_creator === true
+  const actualCurrentPlayer: Player | undefined =
+    room.players?.find((p) => p.id === currentPlayer.id) ??
+    room.players?.find((p) => p.name === currentPlayer.name) ??
+    room.players?.[0];
 
-    // Find the other player (the one that is NOT the current player)
-    if (actualCurrentPlayer) {
-      otherPlayer = room.players.find(p => p.id !== actualCurrentPlayer!.id) || null
-    }
-  }
+  const isCreator: boolean = !!actualCurrentPlayer?.is_creator;
 
+  const otherPlayer: Player | undefined = room.players?.find(
+    (p) => p.id !== actualCurrentPlayer?.id
+  );
 
-  // Game uses AUTO-GAME FLOW - no manual triggers needed
+  const playerSide: string | undefined =
+    actualCurrentPlayer?.side ?? currentPlayer.side ?? currentPlayer.choice;
+
+  const playerWon: boolean = !!(
+    isFinished &&
+    room.result &&
+    (room.personalResult === "win" ||
+      (playerSide && room.result && playerSide === room.result))
+  );
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body text-center">
-          <h1 className="card-title text-2xl md:text-3xl justify-center">
-            <Coins className="h-8 w-8 text-primary" />
-            Coinflip Game
-          </h1>
+    <>
+      <div className="text-center space-y-3">
+        <h1 className="text-lg sm:text-xl font-extrabold flex items-center justify-center gap-2 text-gray-900">
+          <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />
+          Coinflip Game
+        </h1>
 
-          {/* Room Code Display */}
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mt-4">
-            <p className="text-sm font-medium mb-2 text-base-content/70">ROOM CODE</p>
-            <div className="text-3xl md:text-4xl font-bold font-mono tracking-wider mb-3">
-              {room.code}
-            </div>
-            <p className="mb-4 text-base-content/70">
-              Share this code with your opponent to join
-            </p>
+        <div className="bg-gradient-to-r from-purple-100 via-yellow-50 to-purple-100 border border-yellow-300/40 rounded-lg p-2 shadow-inner max-w-[220px] mx-auto">
+          <p className="text-[10px] font-medium text-gray-600 mb-1">
+            ROOM CODE
+          </p>
+          <div className="text-lg font-extrabold font-mono tracking-wider text-purple-900 mb-1">
+            {room.code}
+          </div>
+          <div className="flex justify-center">
             <button
-              onClick={() => navigator.clipboard.writeText(room.code)}
-              className="btn btn-outline btn-sm"
+              onClick={() => void navigator.clipboard.writeText(room.code)}
+              className="inline-flex items-center justify-center rounded-md px-2 py-1 text-[10px] font-bold text-purple-900 shadow-[0_0_4px_rgba(0,0,0,0.2)] transition-all duration-200"
             >
-              <Copy className="h-4 w-4" />
-              Copy Code
+              <Copy className="h-3 w-3 mr-1" />
+              Copy
             </button>
           </div>
         </div>
       </div>
 
-      {/* Room Status */}
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body">
-          {isWaiting && (
-            <div className="text-center space-y-3">
-              <div className="badge badge-neutral badge-lg">
-                🕐 Waiting for another player to join...
-              </div>
-              <p className="text-base-content/70 text-sm">
-                Game will start automatically when both players are ready
+      <div className="text-center text-sm sm:text-base mt-2">
+        {isWaiting && (
+          <p className="text-gray-700">🕐 Waiting for another player...</p>
+        )}
+        {room.status === "full" && (
+          <p className="text-green-600">✅ Both players ready! Starting...</p>
+        )}
+        {room.status === "playing" && (
+          <p className="text-blue-600">🎮 Preparing coin flip...</p>
+        )}
+        {(isFlipping || room.status === "flipping") && (
+          <p className="text-purple-600">🪙 Flipping coin...</p>
+        )}
+        {isFinished && (
+          <p className="text-purple-700 font-bold">🎉 Game finished!</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+        <div className="bg-gradient-to-br from-yellow-50 to-purple-50 rounded-md p-2 border border-yellow-300/40 shadow-sm">
+          <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-1 text-sm">
+            {isCreator && <Crown className="h-4 w-4 text-yellow-500" />}
+            You {isCreator ? "(Creator)" : "(Joiner)"}
+          </h3>
+          <p className="truncate">
+            {actualCurrentPlayer?.name ?? currentPlayer.name}
+          </p>
+          <p className="mt-1 font-bold text-purple-700 text-xs">
+            {(playerSide ?? "UNKNOWN").toUpperCase()}
+          </p>
+          <p className="mt-2 flex items-center gap-1 text-gray-700 text-xs">
+            <DollarSign className="h-4 w-4" /> $10
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-yellow-50 rounded-md p-2 border border-purple-300/40 shadow-sm">
+          <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-1 text-sm">
+            {otherPlayer?.is_creator ? (
+              <Crown className="h-4 w-4 text-yellow-500" />
+            ) : (
+              <Users className="h-4 w-4 text-purple-600" />
+            )}
+            Opponent
+          </h3>
+          {otherPlayer ? (
+            <>
+              <p className="truncate">{otherPlayer.name}</p>
+              <p className="mt-1 font-bold text-yellow-700 text-xs">
+                {(otherPlayer.side ?? "UNKNOWN").toUpperCase()}
               </p>
-            </div>
-          )}
-          {room.status === 'full' && (
-            <div className="text-center space-y-2">
-              <div className="badge badge-success badge-lg">
-                Both players ready! Game will start automatically...
-              </div>
-              <p className="text-base-content/70 text-sm">
-                ⏱️ Auto-starting in a few seconds...
+              <p className="mt-2 flex items-center gap-1 text-gray-700 text-xs">
+                <DollarSign className="h-4 w-4" /> $10
               </p>
-            </div>
-          )}
-          {room.status === 'playing' && (
-            <div className="text-center">
-              <div className="badge badge-info badge-lg">
-                Game starting... Preparing coin flip...
-              </div>
-            </div>
-          )}
-          {(isFlipping || room.status === 'flipping') && (
-            <div className="text-center space-y-2">
-              <div className="badge badge-info badge-lg">
-                🪙 Flipping coin...
-              </div>
-              <p className="text-base-content/70 text-sm">
-                The fate is being decided...
-              </p>
-            </div>
-          )}
-          {isFinished && (
-            <div className="text-center">
-              <div className="badge badge-secondary badge-lg">
-                🎉 Game finished! Check results below.
-              </div>
-            </div>
+            </>
+          ) : (
+            <p className="italic text-gray-500">Waiting...</p>
           )}
         </div>
       </div>
 
-      {/* Players */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Current Player */}
-        <div className="card bg-primary/5 border border-primary/20 shadow-xl">
-          <div className="card-body">
-            <h3 className="card-title text-lg">
-              <Crown className="h-5 w-5 text-primary" />
-              You {isCreator ? '(Creator)' : '(Joiner)'}
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="font-medium">{actualCurrentPlayer?.name || currentPlayer.name}</p>
-                <div className="badge badge-outline mt-1">
-                  {(actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice || 'UNKNOWN').toUpperCase()}
-                </div>
-              </div>
-              <div className="divider my-2"></div>
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span className="text-sm">Bet: $10</span>
-                {!isCreator && (
-                  <div className="badge badge-neutral badge-sm">
-                    Auto-assigned: opposite of creator
-                  </div>
-                )}
-              </div>
-            </div>
+      <div className="text-center mt-4 space-y-3">
+        <div className="flex justify-center">
+          <div
+            className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 shadow-[0_0_10px_rgba(255,215,0,0.6)] flex items-center justify-center text-purple-900 font-bold text-lg ${
+              isFlipping ? "animate-spin" : ""
+            }`}
+          >
+            {isFlipping ? "?" : room.result?.toUpperCase() ?? "?"}
           </div>
         </div>
 
-        {/* Other Player */}
-        <div className="card bg-base-200 shadow-xl">
-          <div className="card-body">
-            <h3 className="card-title text-lg">
-              <Users className="h-5 w-5" />
-              Opponent {otherPlayer ? (otherPlayer.is_creator ? '(Creator)' : '(Joiner)') : ''}
-            </h3>
-            <div className="space-y-3">
-              {otherPlayer ? (
-                <>
-                  <div>
-                    <p className="font-medium">{otherPlayer.name}</p>
-                    <div className="badge badge-outline mt-1">
-                      {(otherPlayer.side || 'UNKNOWN').toUpperCase()}
-                    </div>
-                  </div>
-                  <div className="divider my-2"></div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="text-sm">Bet: $10</span>
-                    <div className="badge badge-neutral badge-sm">
-                      {otherPlayer.is_creator ? 'Chose this side' : 'Auto-assigned'}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-base-content/70 italic">Waiting for player...</p>
-                </div>
-              )}
-            </div>
-          </div>
+        <div className="flex items-center justify-center gap-1 text-green-700 font-bold text-sm">
+          <DollarSign className="h-4 w-4" />
+          Pot: <span className="text-green-600">${room.totalPot ?? 20}</span>
         </div>
       </div>
 
-      {/* Coin Animation */}
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body text-center space-y-6">
-          <div className="flex justify-center">
-            <div
-              className={`w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-accent to-secondary shadow-lg transition-all duration-500 ${
-                isFlipping ? 'animate-spin' : ''
-              }`}
-            >
-              <div className="w-full h-full flex items-center justify-center text-accent-content text-xl md:text-2xl font-bold">
-                {isFlipping ? '?' : room.result ? room.result.toUpperCase() : '?'}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center gap-2">
-            <DollarSign className="h-5 w-5 text-success" />
-            <span className="text-lg md:text-xl font-semibold">
-              Total Pot: <span className="text-success">$20</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Game Results */}
       {isFinished && room.result && (
-        <div className="card bg-base-200 shadow-xl">
-          <div className="card-body">
-            {(() => {
-            // Use personalized result from game_completed event if available
-            const actualPlayerSide = actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice
-            const playerWon = room.personalResult === 'win' || actualPlayerSide === room.result
-            const resultEmoji = playerWon ? '🎉' : '😢'
-            const resultTitle = playerWon ? 'You Win!' : 'You Lose!'
-
-            if (playerWon) {
-              return (
-                  <div className="text-center space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="text-xl md:text-2xl font-bold text-success">
-                        {resultEmoji} {resultTitle}
-                      </h3>
-                      <div className="badge badge-success badge-lg">
-                        Coin Result: {room.result.toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="divider"></div>
-                    <div className="space-y-2">
-                      <p className="text-lg md:text-xl font-bold text-success">
-                        You win ${room.winnings || room.totalPot || 20}!
-                      </p>
-                      {room.winner && (
-                        <p className="text-sm text-base-content/70">
-                          Winner: {typeof room.winner === 'string' ? room.winner : (room.winner?.name || 'Unknown Player')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-              )
-            } else {
-              return (
-                  <div className="text-center space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="text-xl md:text-2xl font-bold text-error">
-                        {resultEmoji} {resultTitle}
-                      </h3>
-                      <div className="badge badge-error badge-lg">
-                        Coin Result: {room.result.toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="divider"></div>
-                    <div className="space-y-2">
-                      <p className="text-lg md:text-xl font-bold text-error">
-                        You lose ${room.winnings !== undefined ? (room.totalPot || 20) - room.winnings : 10}
-                      </p>
-                      {room.winner && (
-                        <p className="text-sm text-base-content/70">
-                          Winner: {typeof room.winner === 'string' ? room.winner : (room.winner?.name || 'Unknown Player')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-              )
-            }
-          })()}
-          </div>
+        <div className="text-center mt-3">
+          <h3
+            className={`text-lg font-extrabold ${
+              playerWon ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {playerWon ? "🎉 You Win!" : "😢 You Lose!"}
+          </h3>
+          <p
+            className={`${playerWon ? "text-green-700" : "text-red-700"} mt-1`}
+          >
+            Coin Result: {room.result.toUpperCase()}
+          </p>
+          <p
+            className={`mt-2 text-sm font-bold ${
+              playerWon ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {playerWon
+              ? `You win $${room.winnings ?? room.totalPot ?? 20}!`
+              : `You lose $${(room.totalPot ?? 20) - (room.winnings ?? 10)}`}
+          </p>
         </div>
       )}
 
-      {/* Action buttons */}
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body">
-          <div className="flex flex-col items-center space-y-4">
-        {/* Auto-Game Flow - No manual triggers needed */}
-            {room.status === 'waiting' && (
-              <div className="text-center space-y-2">
-                <p className="text-base-content/70">
-                  Waiting for another player to join...
-                </p>
-                <p className="text-sm text-base-content/50">
-                  Game will start automatically when both players are ready
-                </p>
-              </div>
-            )}
-
-            {room.status === 'full' && (
-              <div className="text-center space-y-2">
-                <p className="font-medium">
-                  🎮 Game starting automatically...
-                </p>
-                <p className="text-sm text-base-content/70">
-                  No action needed - sit back and watch!
-                </p>
-              </div>
-            )}
-
-            {(room.status === 'playing' || room.status === 'flipping') && (
-              <div className="text-center space-y-2">
-                <p className="font-medium">
-                  🪙 Game in progress...
-                </p>
-                <p className="text-sm text-base-content/70">
-                  The coin is being flipped automatically
-                </p>
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              {isFinished && (
-                <button
-                  onClick={onLeaveRoom}
-                  className="btn btn-outline w-full sm:w-auto"
-                >
-                  🚪 Leave Room
-                </button>
-              )}
-
-              {/* Leave room button - available during active game */}
-              {!isFinished && (
-                <button
-                  onClick={onLeaveRoom}
-                  className="btn btn-error w-full sm:w-auto text-sm"
-                >
-                  🚪 Leave Room
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={onLeaveRoom}
+          className="relative inline-flex items-center rounded-xl 
+          bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 
+          px-4 py-2 text-sm font-bold text-yellow-300 
+          shadow-[0_0_5px_rgba(0,0,0,0.2)] 
+          hover:shadow-[0_0_20px_rgba(138,43,226,1),0_0_40px_rgba(138,43,226,0.9)] 
+          transition-all duration-300 
+          focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        >
+          Leave the Game
+        </button>
       </div>
-    </div>
-  )
+    </>
+  );
 }

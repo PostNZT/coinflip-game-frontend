@@ -1,211 +1,187 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { validatePlayerName, sanitizeString } from '../utils/validation'
-import { ButtonClickHandler } from '../types/game'
-import { Plus, DollarSign, AlertCircle } from 'lucide-react'
+import React, { useState, ChangeEvent } from "react";
+import { validatePlayerName, sanitizeString } from "../utils/validation";
+import { Plus, AlertCircle } from "lucide-react";
 
-/**
- * Props for the RoomCreation component
- */
 interface RoomCreationProps {
-  /** Callback fired when a room is successfully created */
-  readonly onRoomCreated: (playerName: string, choice: 'heads' | 'tails', bet: number) => void;
-  /** External error message (e.g., from WebSocket) */
+  readonly onRoomCreated: (
+    playerName: string,
+    choice: "heads" | "tails",
+    bet: number
+  ) => void;
   readonly externalError?: string | null;
 }
 
-/**
- * Local state interface for validation errors
- */
 interface ValidationErrors {
   name?: string;
 }
 
-/**
- * Component for creating a new game room
- * Includes input validation and error handling
- */
-export default function RoomCreation({ onRoomCreated }: RoomCreationProps): React.JSX.Element {
-  const [playerName, setPlayerName] = useState<string>('')
-  const [choice, setChoice] = useState<'heads' | 'tails'>('heads')
-  const [bet] = useState<number>(10) // Fixed stake amount
-  const [isCreating, setIsCreating] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
+export default function RoomCreation({
+  onRoomCreated,
+  externalError,
+}: RoomCreationProps): React.JSX.Element {
+  const [playerName, setPlayerName] = useState<string>("");
+  const [choice, setChoice] = useState<"heads" | "tails">("heads");
+  const [bet] = useState<number>(10);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+    {}
+  );
 
-  /**
-   * Validates all form inputs
-   * @returns True if all inputs are valid
-   */
   const validateInputs = (): boolean => {
-    const errors: ValidationErrors = {}
+    const errors: ValidationErrors = {};
 
-    // Validate player name
-    const nameValidation = validatePlayerName(playerName)
+    const nameValidation = validatePlayerName(playerName);
     if (!nameValidation.isValid && nameValidation.error) {
-      errors.name = nameValidation.error
+      errors.name = nameValidation.error;
     }
 
-    // No bet validation needed - fixed amount
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  /**
-   * Handles room creation with proper error handling
-   */
   const handleCreateRoom = (): void => {
-    // Clear previous errors
-    setError(null)
-    setValidationErrors({})
+    setError(null);
+    setValidationErrors({});
 
-    // Validate inputs
     if (!validateInputs()) {
-      return
+      return;
     }
 
-    setIsCreating(true)
+    setIsCreating(true);
 
     try {
-      const sanitizedName = sanitizeString(playerName)
-
-      // Success - notify parent component to handle WebSocket room creation
-      onRoomCreated(sanitizedName, choice, bet)
-    } catch (error: unknown) {
-      console.error('Error creating room:', error)
-
-      // Set user-friendly error message
-      if (error instanceof Error) {
-        setError(error.message)
+      const sanitizedName = sanitizeString(playerName);
+      onRoomCreated(sanitizedName, choice, bet);
+    } catch (err: unknown) {
+      console.error("Error creating room:", err);
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
-        setError('Failed to create room. Please check your connection and try again.')
+        setError(
+          "Failed to create room. Please check your connection and try again."
+        );
       }
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
-  /**
-   * Handles player name input with validation
-   */
-  const handleNameChange = (value: string): void => {
-    setPlayerName(value)
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value;
+    setPlayerName(value);
 
-    // Clear name validation error when user starts typing
     if (validationErrors.name) {
-      setValidationErrors(prev => {
-        const { name, ...rest } = prev
-        return rest
-      })
+      setValidationErrors((prev) => {
+        const { name, ...rest } = prev;
+        return rest;
+      });
     }
-  }
+  };
 
-
-  /**
-   * Handles choice button clicks
-   */
-  const handleChoiceChange = (newChoice: 'heads' | 'tails'): ButtonClickHandler => {
-    return (): void => {
-      setChoice(newChoice)
-    }
-  }
+  const handleChoiceChange = (newChoice: "heads" | "tails"): void => {
+    setChoice(newChoice);
+  };
 
   return (
-    <div className="card bg-base-300 shadow-lg p-8 w-full max-w-md">
-      <div className="card-body space-y-6">
-        <div className="text-center">
-          <h2 className="card-title text-2xl justify-center gap-3 mb-2">
-            <Plus className="h-7 w-7 text-primary" />
-            Create New Room
-          </h2>
-          <p className="text-base-content/70">
-            Set up a new game and invite a friend to join
+    <div className="w-full max-w-md space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
+          <span className="text-yellow-500">＋</span>
+          Create New Room
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Set up a new game and invite a friend to join
+        </p>
+      </div>
+
+      <div>
+        <label
+          htmlFor="playerName"
+          className="block text-sm font-medium text-gray-600 mb-1"
+        >
+          Your Name
+        </label>
+        <input
+          id="playerName"
+          type="text"
+          value={playerName}
+          onChange={handleNameChange}
+          className={`w-full rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 shadow-sm ${
+            validationErrors.name
+              ? "border-red-500 focus:ring-red-500"
+              : "border-gray-300 focus:ring-yellow-500"
+          }`}
+          placeholder="Enter your name"
+          disabled={isCreating}
+        />
+        {validationErrors.name && (
+          <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+            <AlertCircle className="h-4 w-4" />
+            {validationErrors.name}
           </p>
-        </div>
-
-        {/* Global Error Display */}
-        {error && (
-          <div className="alert alert-error">
-            <AlertCircle className="h-5 w-5" />
-            <span>{error}</span>
-          </div>
         )}
+      </div>
 
-        {/* Player Name Input */}
-        <div className="form-control w-full">
-          <label className="label" htmlFor="playerName">
-            <span className="label-text">Your Name</span>
-          </label>
-          <input
-            id="playerName"
-            type="text"
-            value={playerName}
-            onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="Enter your name"
-            maxLength={20}
+      <div className="text-center">
+        <p className="text-sm font-medium text-gray-600 mb-2">
+          Choose Your Side
+        </p>
+        <div className="flex justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => handleChoiceChange("heads")}
             disabled={isCreating}
-            className={`input input-bordered w-full ${
-              validationErrors.name ? 'input-error' : ''
+            className={`relative inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              choice === "heads"
+                ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-purple-900 shadow-[0_0_10px_rgba(255,215,0,0.9)] hover:shadow-[0_0_20px_rgba(255,223,0,1),0_0_40px_rgba(255,215,0,0.9)] focus:ring-yellow-400"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
-          />
-          {validationErrors.name && (
-            <label className="label">
-              <span className="label-text-alt text-error">{validationErrors.name}</span>
-            </label>
-          )}
+          >
+            Heads
+          </button>
+          <button
+            type="button"
+            onClick={() => handleChoiceChange("tails")}
+            disabled={isCreating}
+            className={`relative inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              choice === "tails"
+                ? "bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-yellow-300 shadow-[0_0_10px_rgba(138,43,226,0.9)] hover:shadow-[0_0_20px_rgba(138,43,226,1),0_0_40px_rgba(138,43,226,0.9)] focus:ring-purple-500"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Tails
+          </button>
         </div>
+      </div>
 
-        {/* Side Selection */}
-        <div className="form-control w-full">
-          <label className="label">
-            <span className="label-text">Choose Your Side</span>
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={handleChoiceChange('heads')}
-              disabled={isCreating}
-              className={`btn h-12 text-base ${
-                choice === 'heads' ? 'btn-primary' : 'btn-outline'
-              } ${isCreating ? 'btn-disabled' : ''}`}
-            >
-              Heads
-            </button>
-            <button
-              onClick={handleChoiceChange('tails')}
-              disabled={isCreating}
-              className={`btn h-12 text-base ${
-                choice === 'tails' ? 'btn-primary' : 'btn-outline'
-              } ${isCreating ? 'btn-disabled' : ''}`}
-            >
-              Tails
-            </button>
-          </div>
+      <div className="text-center p-4 border rounded-lg bg-green-50 border-green-200">
+        <p className="text-2xl font-bold text-green-600">$ {bet.toFixed(2)}</p>
+        <p className="text-sm text-gray-500">
+          Fixed stake amount for all games
+        </p>
+      </div>
+
+      {(error || externalError) && (
+        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" />
+          {error || externalError}
         </div>
+      )}
 
-        {/* Fixed Bet Amount Display */}
-        <div className="form-control w-full">
-          <label className="label">
-            <span className="label-text">Bet Amount (Fixed)</span>
-          </label>
-          <div className="alert alert-success">
-            <div className="flex items-center justify-center gap-2">
-              <DollarSign className="h-6 w-6" />
-              <span className="text-3xl font-bold">10.00</span>
-            </div>
-            <p className="text-sm text-center mt-2">
-              Fixed stake amount for all games
-            </p>
-          </div>
-        </div>
-
-        {/* Submit Button */}
+      <div className="flex justify-center">
         <button
+          type="button"
           onClick={handleCreateRoom}
           disabled={isCreating}
-          className={`btn w-full h-14 text-lg gap-3 ${
-            isCreating ? 'btn-disabled' : 'btn-primary'
-          }`}
+          className="relative inline-flex items-center justify-center rounded-xl 
+            bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 
+            px-4 py-2 text-sm font-extrabold text-purple-900 
+            shadow-[0_0_5px_rgba(0,0,0,0.2)] 
+            hover:shadow-[0_0_20px_rgba(255,223,0,1),0_0_40px_rgba(255,215,0,0.9)] 
+            transition-all duration-300 
+            focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 w-full disabled:opacity-70"
         >
           {isCreating ? (
             <>
@@ -214,12 +190,12 @@ export default function RoomCreation({ onRoomCreated }: RoomCreationProps): Reac
             </>
           ) : (
             <>
-              <Plus className="h-6 w-6" />
+              <Plus className="h-4 w-4 mr-2" />
               Create Room
             </>
           )}
         </button>
       </div>
     </div>
-  )
+  );
 }
