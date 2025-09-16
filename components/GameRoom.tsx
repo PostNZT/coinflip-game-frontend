@@ -110,7 +110,11 @@ export default function GameRoom({
       <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
         <div className="bg-gradient-to-br from-yellow-50 to-purple-50 rounded-md p-2 border border-yellow-300/40 shadow-sm">
           <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-1 text-sm">
-            {isCreator && <Crown className="h-4 w-4 text-yellow-500" />}
+            {isCreator ? (
+              <Crown className="h-4 w-4 text-yellow-500" />
+            ) : (
+              <Users className="h-4 w-4 text-purple-600" />
+            )}
             You {isCreator ? "(Creator)" : "(Joiner)"}
           </h3>
           <p className="truncate">
@@ -131,7 +135,7 @@ export default function GameRoom({
             ) : (
               <Users className="h-4 w-4 text-purple-600" />
             )}
-            Opponent
+            Opponent {otherPlayer?.is_creator ? "(Creator)" : "(Joiner)"}
           </h3>
           {otherPlayer ? (
             <>
