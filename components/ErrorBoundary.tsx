@@ -3,6 +3,7 @@
 import React from 'react'
 import toast from 'react-hot-toast'
 import { logError, logWarn } from '../utils/logger'
+import { AlertTriangle, RefreshCw, RotateCcw } from 'lucide-react'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -155,48 +156,59 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
       // Default error UI
       return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-center text-red-600 mb-4">
-              Something went wrong
-            </h2>
-            <div className="text-center mb-6">
-              <p className="text-gray-700 mb-4">
+        <div className="min-h-screen bg-base-100 flex items-center justify-center p-4">
+          <div className="card w-full max-w-md bg-base-200 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title text-xl justify-center text-error">
+                <AlertTriangle className="h-6 w-6" />
+                Something went wrong
+              </h2>
+              <p className="text-base-content/70 text-center">
                 The application encountered an unexpected error.
               </p>
-              <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">
-                <p className="text-sm text-red-700 font-mono">
-                  {this.state.error?.message || 'Unknown error occurred'}
-                </p>
-                {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-                  <details className="mt-2 text-xs text-red-600">
-                    <summary className="cursor-pointer">Error Details (Dev Mode)</summary>
-                    <pre className="mt-2 whitespace-pre-wrap text-left">
-                      {this.state.errorInfo.componentStack}
-                    </pre>
-                  </details>
-                )}
+
+              <div className="alert alert-error mt-4">
+                <AlertTriangle className="h-4 w-4" />
+                <div className="space-y-2">
+                  <p className="font-mono text-sm">
+                    {this.state.error?.message || 'Unknown error occurred'}
+                  </p>
+                  {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer font-medium">Error Details (Dev Mode)</summary>
+                      <pre className="mt-2 whitespace-pre-wrap text-left bg-base-300 p-2 rounded">
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    </details>
+                  )}
+                </div>
               </div>
+
               {this.state.retryCount > 0 && (
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-base-content/70 text-center">
                   Retry attempts: {this.state.retryCount}
                 </p>
               )}
-            </div>
-            <div className="text-center space-x-4">
-              <button
-                onClick={this.handleRetry}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mr-2"
-                disabled={this.state.retryCount >= 3}
-              >
-                {this.state.retryCount >= 3 ? 'Max Retries' : 'Try Again'}
-              </button>
-              <button
-                onClick={this.handleReload}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Reload Page
-              </button>
+
+              <div className="card-actions justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <button
+                    onClick={this.handleRetry}
+                    disabled={this.state.retryCount >= 3}
+                    className={`btn flex-1 ${this.state.retryCount >= 3 ? 'btn-disabled' : 'btn-primary'}`}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {this.state.retryCount >= 3 ? 'Max Retries' : 'Try Again'}
+                  </button>
+                  <button
+                    onClick={this.handleReload}
+                    className="btn btn-outline flex-1"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Reload Page
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

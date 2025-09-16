@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { validatePlayerName, validateRoomCode, sanitizeString } from '../utils/validation'
+import { Users, AlertCircle } from 'lucide-react'
 
 /**
  * Props for the RoomJoining component
@@ -127,73 +128,95 @@ export default function RoomJoining({ onRoomJoined, externalError }: RoomJoining
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-        Join Room
-      </h2>
-
-      {/* Global Error Display */}
-      {(error || externalError) && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {externalError || error}
+    <div className="card bg-base-300 shadow-lg p-8 w-full max-w-md">
+      <div className="card-body space-y-6">
+        <div className="text-center">
+          <h2 className="card-title text-2xl justify-center gap-3 mb-2">
+            <Users className="h-7 w-7 text-primary" />
+            Join Room
+          </h2>
+          <p className="text-base-content/70">
+            Enter a room code to join an existing game
+          </p>
         </div>
-      )}
 
-      <div className="space-y-4">
-        {/* Player Name Input */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Your Name
-          </label>
-          <input
-            type="text"
-            value={playerName}
-            onChange={(e) => handleNameChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-              validationErrors.name
-                ? 'border-red-300 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
-            placeholder="Enter your name"
-            maxLength={20}
+        {/* Global Error Display */}
+        {(error || externalError) && (
+          <div className="alert alert-error">
+            <AlertCircle className="h-5 w-5" />
+            <span>{externalError || error}</span>
+          </div>
+        )}
+
+        <div className="space-y-6">
+
+          {/* Player Name Input */}
+          <div className="form-control w-full">
+            <label className="label" htmlFor="playerName">
+              <span className="label-text">Your Name</span>
+            </label>
+            <input
+              id="playerName"
+              type="text"
+              value={playerName}
+              onChange={(e) => handleNameChange(e.target.value)}
+              placeholder="Enter your name"
+              maxLength={20}
+              disabled={isJoining}
+              className={`input input-bordered w-full ${
+                validationErrors.name ? 'input-error' : ''
+              }`}
+            />
+            {validationErrors.name && (
+              <label className="label">
+                <span className="label-text-alt text-error">{validationErrors.name}</span>
+              </label>
+            )}
+          </div>
+
+          {/* Room Code Input */}
+          <div className="form-control w-full">
+            <label className="label" htmlFor="roomCode">
+              <span className="label-text">Room Code (6 characters)</span>
+            </label>
+            <input
+              id="roomCode"
+              type="text"
+              value={roomCode}
+              onChange={(e) => handleCodeChange(e.target.value)}
+              placeholder="ABC123"
+              maxLength={6}
+              disabled={isJoining}
+              className={`input input-bordered w-full text-center font-mono text-lg tracking-wider ${
+                validationErrors.code ? 'input-error' : ''
+              }`}
+            />
+            {validationErrors.code && (
+              <label className="label">
+                <span className="label-text-alt text-error">{validationErrors.code}</span>
+              </label>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={handleJoinRoom}
             disabled={isJoining}
-          />
-          {validationErrors.name && (
-            <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
-          )}
+            className="btn btn-primary w-full h-12 text-base"
+          >
+            {isJoining ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>
+                Joining Room...
+              </>
+            ) : (
+              <>
+                <Users className="h-4 w-4" />
+                Join Room
+              </>
+            )}
+          </button>
         </div>
-
-        {/* Room Code Input */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Room Code (6 characters)
-          </label>
-          <input
-            type="text"
-            value={roomCode}
-            onChange={(e) => handleCodeChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-center font-mono text-lg ${
-              validationErrors.code
-                ? 'border-red-300 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
-            placeholder="ABC123"
-            maxLength={6}
-            disabled={isJoining}
-          />
-          {validationErrors.code && (
-            <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <button
-          onClick={handleJoinRoom}
-          disabled={isJoining}
-          className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
-        >
-          {isJoining ? 'Joining Room...' : 'Join Room'}
-        </button>
       </div>
     </div>
   )

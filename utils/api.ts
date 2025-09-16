@@ -19,7 +19,7 @@ export const WEBSOCKET_EVENTS = {
   // Client to Server
   CREATE_ROOM: 'create_room',
   JOIN_ROOM: 'join_room',
-  FLIP_COIN: 'flip_coin', // Optional - Game auto-starts now
+  FLIP_COIN: 'flip_coin',
   GET_ROOM_STATUS: 'get_room_status',
 
   // Server to Client
@@ -28,7 +28,7 @@ export const WEBSOCKET_EVENTS = {
   ROOM_READY: 'room_ready',
   COIN_FLIP_STARTED: 'coin_flip_started',
   COIN_FLIP_RESULT: 'coin_flip_result',
-  GAME_COMPLETED: 'game_completed', // NEW - Individual results
+  GAME_COMPLETED: 'game_completed',
   ROOM_STATUS: 'room_status',
   ERROR: 'error',
   JOIN_ROOM_ERROR: 'join_room_error',

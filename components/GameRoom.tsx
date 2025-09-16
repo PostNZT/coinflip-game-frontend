@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Room, Player } from '../types/game'
+import { Copy, Crown, Users, DollarSign, Coins } from 'lucide-react'
 
 /**
  * Props for the GameRoom component
@@ -88,143 +89,179 @@ export default function GameRoom({
   // Game uses AUTO-GAME FLOW - no manual triggers needed
 
   return (
-    <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full mx-4">
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Coinflip Game
-        </h1>
+    <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="card bg-base-200 shadow-xl">
+        <div className="card-body text-center">
+          <h1 className="card-title text-2xl md:text-3xl justify-center">
+            <Coins className="h-8 w-8 text-primary" />
+            Coinflip Game
+          </h1>
 
-        {/* Prominent Room Code Display */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-          <div className="text-sm text-blue-600 font-medium mb-1">ROOM CODE</div>
-          <div className="text-4xl font-bold font-mono text-blue-800 tracking-wider mb-2">
-            {room.code}
+          {/* Room Code Display */}
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mt-4">
+            <p className="text-sm font-medium mb-2 text-base-content/70">ROOM CODE</p>
+            <div className="text-3xl md:text-4xl font-bold font-mono tracking-wider mb-3">
+              {room.code}
+            </div>
+            <p className="mb-4 text-base-content/70">
+              Share this code with your opponent to join
+            </p>
+            <button
+              onClick={() => navigator.clipboard.writeText(room.code)}
+              className="btn btn-outline btn-sm"
+            >
+              <Copy className="h-4 w-4" />
+              Copy Code
+            </button>
           </div>
-          <div className="text-sm text-blue-600">
-            Share this code with your opponent to join
-          </div>
-          <button
-            onClick={() => navigator.clipboard.writeText(room.code)}
-            className="mt-2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded transition-colors"
-          >
-            📋 Copy Code
-          </button>
         </div>
       </div>
 
       {/* Room Status */}
-      <div className="text-center mb-6">
-        {isWaiting && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-4">
-            <p className="font-medium text-lg">🕐 Waiting for another player to join...</p>
-            <div className="mt-3 p-3 bg-yellow-50 rounded border border-yellow-300">
-              <p className="text-sm font-medium">Share this room code:</p>
-              <div className="text-2xl font-bold font-mono mt-1 text-yellow-800">{room.code}</div>
-            </div>
-          </div>
-        )}
-        {room.status === 'full' && (
-          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded">
-            <p className="font-medium">Both players ready! Game will start automatically...</p>
-            <div className="mt-2 text-sm text-green-600">
-              ⏱️ Auto-starting in a few seconds...
-            </div>
-          </div>
-        )}
-        {room.status === 'playing' && (
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
-            <p className="font-medium">Game starting... Preparing coin flip...</p>
-          </div>
-        )}
-        {(isFlipping || room.status === 'flipping') && (
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
-            <p className="font-medium">🪙 Flipping coin...</p>
-            <div className="mt-2 text-sm text-blue-600">
-              The fate is being decided...
-            </div>
-          </div>
-        )}
-        {isFinished && (
-          <div className="bg-purple-100 border-l-4 border-purple-500 text-purple-700 p-4 rounded">
-            <p className="font-medium">🎉 Game finished! Check results below.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Players */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {/* Current Player */}
-        <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-          <h3 className="font-bold text-blue-800 mb-2">
-            You {isCreator ? '(Creator)' : '(Joiner)'}
-          </h3>
-          <p className="text-gray-700">{actualCurrentPlayer?.name || currentPlayer.name}</p>
-          <p className="text-lg font-semibold text-blue-600">
-            {(actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice || 'UNKNOWN').toUpperCase()}
-          </p>
-          <p className="text-sm text-gray-600">
-            Bet: $10
-            {!isCreator && (
-              <span className="text-blue-600 ml-2">
-                (Auto-assigned: opposite of creator)
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Other Player */}
-        <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
-          <h3 className="font-bold text-gray-800 mb-2">
-            Opponent {otherPlayer ? (otherPlayer.is_creator ? '(Creator)' : '(Joiner)') : ''}
-          </h3>
-          {otherPlayer ? (
-            <>
-              <p className="text-gray-700">{otherPlayer.name}</p>
-              <p className="text-lg font-semibold text-gray-600">
-                {(otherPlayer.side || 'UNKNOWN').toUpperCase()}
+      <div className="card bg-base-200 shadow-xl">
+        <div className="card-body">
+          {isWaiting && (
+            <div className="text-center space-y-3">
+              <div className="badge badge-neutral badge-lg">
+                🕐 Waiting for another player to join...
+              </div>
+              <p className="text-base-content/70 text-sm">
+                Game will start automatically when both players are ready
               </p>
-              <p className="text-sm text-gray-600">
-                Bet: $10
-                {otherPlayer.is_creator ? (
-                  <span className="text-gray-500 ml-2">(Chose this side)</span>
-                ) : (
-                  <span className="text-gray-500 ml-2">(Auto-assigned)</span>
-                )}
+            </div>
+          )}
+          {room.status === 'full' && (
+            <div className="text-center space-y-2">
+              <div className="badge badge-success badge-lg">
+                Both players ready! Game will start automatically...
+              </div>
+              <p className="text-base-content/70 text-sm">
+                ⏱️ Auto-starting in a few seconds...
               </p>
-            </>
-          ) : (
-            <div>
-              <p className="text-gray-500 italic">Waiting for player...</p>
+            </div>
+          )}
+          {room.status === 'playing' && (
+            <div className="text-center">
+              <div className="badge badge-info badge-lg">
+                Game starting... Preparing coin flip...
+              </div>
+            </div>
+          )}
+          {(isFlipping || room.status === 'flipping') && (
+            <div className="text-center space-y-2">
+              <div className="badge badge-info badge-lg">
+                🪙 Flipping coin...
+              </div>
+              <p className="text-base-content/70 text-sm">
+                The fate is being decided...
+              </p>
+            </div>
+          )}
+          {isFinished && (
+            <div className="text-center">
+              <div className="badge badge-secondary badge-lg">
+                🎉 Game finished! Check results below.
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Coin Animation */}
-      <div className="text-center mb-8">
-        <div className="mb-4">
-          <div
-            className={`inline-block w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg transition-all duration-500 ${
-              isFlipping ? 'animate-spin' : ''
-            }`}
-          >
-            <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
-              {isFlipping ? '?' : room.result ? room.result.toUpperCase() : '?'}
+      {/* Players */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Current Player */}
+        <div className="card bg-primary/5 border border-primary/20 shadow-xl">
+          <div className="card-body">
+            <h3 className="card-title text-lg">
+              <Crown className="h-5 w-5 text-primary" />
+              You {isCreator ? '(Creator)' : '(Joiner)'}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="font-medium">{actualCurrentPlayer?.name || currentPlayer.name}</p>
+                <div className="badge badge-outline mt-1">
+                  {(actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice || 'UNKNOWN').toUpperCase()}
+                </div>
+              </div>
+              <div className="divider my-2"></div>
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                <span className="text-sm">Bet: $10</span>
+                {!isCreator && (
+                  <div className="badge badge-neutral badge-sm">
+                    Auto-assigned: opposite of creator
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="text-center">
-          <p className="text-xl font-semibold text-gray-700 mb-2">
-            Total Pot: <span className="text-green-600">$20</span>
-          </p>
+        {/* Other Player */}
+        <div className="card bg-base-200 shadow-xl">
+          <div className="card-body">
+            <h3 className="card-title text-lg">
+              <Users className="h-5 w-5" />
+              Opponent {otherPlayer ? (otherPlayer.is_creator ? '(Creator)' : '(Joiner)') : ''}
+            </h3>
+            <div className="space-y-3">
+              {otherPlayer ? (
+                <>
+                  <div>
+                    <p className="font-medium">{otherPlayer.name}</p>
+                    <div className="badge badge-outline mt-1">
+                      {(otherPlayer.side || 'UNKNOWN').toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="text-sm">Bet: $10</span>
+                    <div className="badge badge-neutral badge-sm">
+                      {otherPlayer.is_creator ? 'Chose this side' : 'Auto-assigned'}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-base-content/70 italic">Waiting for player...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Coin Animation */}
+      <div className="card bg-base-200 shadow-xl">
+        <div className="card-body text-center space-y-6">
+          <div className="flex justify-center">
+            <div
+              className={`w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-accent to-secondary shadow-lg transition-all duration-500 ${
+                isFlipping ? 'animate-spin' : ''
+              }`}
+            >
+              <div className="w-full h-full flex items-center justify-center text-accent-content text-xl md:text-2xl font-bold">
+                {isFlipping ? '?' : room.result ? room.result.toUpperCase() : '?'}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-2">
+            <DollarSign className="h-5 w-5 text-success" />
+            <span className="text-lg md:text-xl font-semibold">
+              Total Pot: <span className="text-success">$20</span>
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Game Results */}
       {isFinished && room.result && (
-        <div className="text-center mb-6">
-          {(() => {
+        <div className="card bg-base-200 shadow-xl">
+          <div className="card-body">
+            {(() => {
             // Use personalized result from game_completed event if available
             const actualPlayerSide = actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice
             const playerWon = room.personalResult === 'win' || actualPlayerSide === room.result
@@ -233,129 +270,119 @@ export default function GameRoom({
 
             if (playerWon) {
               return (
-                <div className="bg-green-100 border border-green-300 rounded-lg p-6">
-                  <h3 className="text-2xl font-bold text-green-800 mb-2">
-                    {resultEmoji} {resultTitle}
-                  </h3>
-                  <p className="text-lg text-green-700 mb-3">
-                    Coin Result: <strong>{room.result.toUpperCase()}</strong>
-                  </p>
-                  <div className="bg-white rounded-lg p-4 mb-3">
-                    <p className="text-sm text-gray-600 mb-2">Game Summary:</p>
-                    <div className="flex justify-between items-center">
-                      <span className="px-3 py-1 rounded text-sm bg-green-100 text-green-800">
-                        {actualCurrentPlayer?.name || currentPlayer.name} chose: {(actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice || 'UNKNOWN').toUpperCase()}
-                      </span>
-                      <span className="text-lg font-bold">VS</span>
-                      <span className="px-3 py-1 rounded text-sm bg-red-100 text-red-800">
-                        {otherPlayer?.name || 'Opponent'}: {(otherPlayer?.side || 'Unknown').toUpperCase()}
-                      </span>
+                  <div className="text-center space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="text-xl md:text-2xl font-bold text-success">
+                        {resultEmoji} {resultTitle}
+                      </h3>
+                      <div className="badge badge-success badge-lg">
+                        Coin Result: {room.result.toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="space-y-2">
+                      <p className="text-lg md:text-xl font-bold text-success">
+                        You win ${room.winnings || room.totalPot || 20}!
+                      </p>
+                      {room.winner && (
+                        <p className="text-sm text-base-content/70">
+                          Winner: {typeof room.winner === 'string' ? room.winner : (room.winner?.name || 'Unknown Player')}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <p className="text-xl font-bold text-green-800">
-                    You win ${room.winnings || room.totalPot || 20}!
-                  </p>
-                  {room.winner && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      Winner: {typeof room.winner === 'string' ? room.winner : (room.winner?.name || 'Unknown Player')}
-                    </p>
-                  )}
-                </div>
               )
             } else {
               return (
-                <div className="bg-red-100 border border-red-300 rounded-lg p-6">
-                  <h3 className="text-2xl font-bold text-red-800 mb-2">
-                    {resultEmoji} {resultTitle}
-                  </h3>
-                  <p className="text-lg text-red-700 mb-3">
-                    Coin Result: <strong>{room.result.toUpperCase()}</strong>
-                  </p>
-                  <div className="bg-white rounded-lg p-4 mb-3">
-                    <p className="text-sm text-gray-600 mb-2">Game Summary:</p>
-                    <div className="flex justify-between items-center">
-                      <span className="px-3 py-1 rounded text-sm bg-red-100 text-red-800">
-                        {actualCurrentPlayer?.name || currentPlayer.name} chose: {(actualCurrentPlayer?.side || currentPlayer.side || currentPlayer.choice || 'UNKNOWN').toUpperCase()}
-                      </span>
-                      <span className="text-lg font-bold">VS</span>
-                      <span className="px-3 py-1 rounded text-sm bg-green-100 text-green-800">
-                        {otherPlayer?.name || 'Opponent'}: {(otherPlayer?.side || 'Unknown').toUpperCase()}
-                      </span>
+                  <div className="text-center space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="text-xl md:text-2xl font-bold text-error">
+                        {resultEmoji} {resultTitle}
+                      </h3>
+                      <div className="badge badge-error badge-lg">
+                        Coin Result: {room.result.toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="space-y-2">
+                      <p className="text-lg md:text-xl font-bold text-error">
+                        You lose ${room.winnings !== undefined ? (room.totalPot || 20) - room.winnings : 10}
+                      </p>
+                      {room.winner && (
+                        <p className="text-sm text-base-content/70">
+                          Winner: {typeof room.winner === 'string' ? room.winner : (room.winner?.name || 'Unknown Player')}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <p className="text-xl font-bold text-red-800">
-                    You lose ${room.winnings !== undefined ? (room.totalPot || 20) - room.winnings : 10}
-                  </p>
-                  {room.winner && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      Winner: {typeof room.winner === 'string' ? room.winner : (room.winner?.name || 'Unknown Player')}
-                    </p>
-                  )}
-                </div>
               )
             }
           })()}
+          </div>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex justify-center space-x-4">
+      {/* Action buttons */}
+      <div className="card bg-base-200 shadow-xl">
+        <div className="card-body">
+          <div className="flex flex-col items-center space-y-4">
         {/* Auto-Game Flow - No manual triggers needed */}
-        {room.status === 'waiting' && (
-          <div className="text-center">
-            <p className="text-gray-600 mb-4">
-              Waiting for another player to join...
-            </p>
-            <p className="text-sm text-gray-500">
-              Game will start automatically when both players are ready
-            </p>
+            {room.status === 'waiting' && (
+              <div className="text-center space-y-2">
+                <p className="text-base-content/70">
+                  Waiting for another player to join...
+                </p>
+                <p className="text-sm text-base-content/50">
+                  Game will start automatically when both players are ready
+                </p>
+              </div>
+            )}
+
+            {room.status === 'full' && (
+              <div className="text-center space-y-2">
+                <p className="font-medium">
+                  🎮 Game starting automatically...
+                </p>
+                <p className="text-sm text-base-content/70">
+                  No action needed - sit back and watch!
+                </p>
+              </div>
+            )}
+
+            {(room.status === 'playing' || room.status === 'flipping') && (
+              <div className="text-center space-y-2">
+                <p className="font-medium">
+                  🪙 Game in progress...
+                </p>
+                <p className="text-sm text-base-content/70">
+                  The coin is being flipped automatically
+                </p>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {isFinished && (
+                <button
+                  onClick={onLeaveRoom}
+                  className="btn btn-outline w-full sm:w-auto"
+                >
+                  🚪 Leave Room
+                </button>
+              )}
+
+              {/* Leave room button - available during active game */}
+              {!isFinished && (
+                <button
+                  onClick={onLeaveRoom}
+                  className="btn btn-error w-full sm:w-auto text-sm"
+                >
+                  🚪 Leave Room
+                </button>
+              )}
+            </div>
           </div>
-        )}
-
-        {room.status === 'full' && (
-          <div className="text-center">
-            <p className="text-green-600 font-medium mb-2">
-              🎮 Game starting automatically...
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              No action needed - sit back and watch!
-            </p>
-
-          </div>
-        )}
-
-        {(room.status === 'playing' || room.status === 'flipping') && (
-          <div className="text-center">
-            <p className="text-blue-600 font-medium mb-2">
-              🪙 Game in progress...
-            </p>
-            <p className="text-sm text-gray-500">
-              The coin is being flipped automatically
-            </p>
-          </div>
-        )}
-
-        {isFinished && (
-          <div className="flex justify-center">
-            <button
-              onClick={onLeaveRoom}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
-            >
-              🚪 Leave Room
-            </button>
-          </div>
-        )}
-
-
-        {/* Leave room button - available during active game */}
-        {!isFinished && (
-          <button
-            onClick={onLeaveRoom}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-          >
-            🚪 Leave Room
-          </button>
-        )}
+        </div>
       </div>
     </div>
   )

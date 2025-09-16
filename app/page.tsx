@@ -9,6 +9,7 @@ import ErrorBoundary from '../components/ErrorBoundary'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { Player, TempPlayer } from '../types/game'
 import { logError, logInfo } from '../utils/logger'
+import { Coins, Plus, Users, Wifi, WifiOff, AlertCircle } from 'lucide-react'
 
 /**
  * Application modes for navigation
@@ -254,25 +255,36 @@ export default function Home(): React.JSX.Element {
 
     if (gameRoom && gamePlayer) {
       return (
-        <main className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-          <GameRoom
-            room={gameRoom}
-            currentPlayer={gamePlayer}
-            onStartGame={forceGameStart} // Fallback manual trigger
-            onFlipCoin={() => {}} // No-op - auto-game flow
-            onLeaveRoom={handleLeaveRoom}
-          />
+        <main className="min-h-screen bg-base-100 flex items-center justify-center p-4">
+          {/* Game Room Container Card */}
+          <div className="card w-full max-w-6xl bg-base-300 shadow-2xl border-2 border-primary/20">
+            <div className="card-body p-6">
+              <GameRoom
+                room={gameRoom}
+                currentPlayer={gamePlayer}
+                onStartGame={forceGameStart} // Fallback manual trigger
+                onFlipCoin={() => {}} // No-op - auto-game flow
+                onLeaveRoom={handleLeaveRoom}
+              />
+            </div>
+          </div>
 
           {/* Connection Status */}
           {!isConnected && (
-            <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded">
-              Disconnected
+            <div className="fixed top-4 right-4">
+              <div className="alert alert-error text-sm shadow-md">
+                <WifiOff className="h-3 w-3" />
+                Disconnected
+              </div>
             </div>
           )}
 
           {error && (
-            <div className="fixed top-4 left-4 bg-red-500 text-white px-4 py-2 rounded">
-              {error}
+            <div className="fixed top-4 left-4">
+              <div className="alert alert-error text-sm shadow-md">
+                <AlertCircle className="h-3 w-3" />
+                {error}
+              </div>
             </div>
           )}
         </main>
@@ -281,45 +293,55 @@ export default function Home(): React.JSX.Element {
 
     // Fallback UI when in game mode but missing room/player data
     return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-            Loading Game...
-          </h2>
+      <main className="min-h-screen bg-base-100 flex items-center justify-center p-4">
+        {/* Loading/Error Container Card */}
+        <div className="card w-full max-w-2xl bg-base-300 shadow-2xl border-2 border-primary/20">
+          <div className="card-body p-8">
+            <div className="card w-full bg-base-200 shadow-xl border border-accent/20">
+              <div className="card-body">
+                <h2 className="card-title justify-center text-primary">
+                  <Coins className="h-8 w-8" />
+                  Loading Game...
+                </h2>
 
-          {error ? (
-            <div className="text-center">
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
+                {error ? (
+                  <div className="text-center space-y-4">
+                    <div className="alert alert-error">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{error}</span>
+                    </div>
+                    <button
+                      onClick={handleLeaveRoom}
+                      className="btn btn-primary w-full"
+                    >
+                      Back to Menu
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="flex justify-center">
+                      <span className="loading loading-spinner loading-lg text-primary"></span>
+                    </div>
+                    <p className="text-base-content/70">Connecting to game...</p>
+                    <button
+                      onClick={handleLeaveRoom}
+                      className="btn btn-outline w-full"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {/* Connection Status */}
+                {!isConnected && (
+                  <div className="alert alert-error">
+                    <WifiOff className="h-4 w-4" />
+                    <span>Not Connected to Server</span>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleLeaveRoom}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Back to Menu
-              </button>
             </div>
-          ) : (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">Connecting to game...</p>
-
-
-              <button
-                onClick={handleLeaveRoom}
-                className="mt-4 text-blue-500 hover:text-blue-600 underline"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-
-          {/* Connection Status */}
-          {!isConnected && (
-            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center">
-              ❌ Not Connected to Server
-            </div>
-          )}
+          </div>
         </div>
       </main>
     )
@@ -327,120 +349,144 @@ export default function Home(): React.JSX.Element {
 
   return (
     <ErrorBoundary>
-      <main className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-      {gameMode === 'menu' && (
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
-            Coinflip Game
-          </h1>
+      <main className="h-screen bg-base-100 flex items-center justify-center p-6">
+        {/* Main Container Card */}
+        <div className="card bg-base-200 shadow-2xl p-8 w-full max-w-4xl mx-auto">
+          <div className="card-body flex flex-col items-center justify-center space-y-8 text-center">
+            {gameMode === 'menu' && (
+              <>
+                {/* Hero Card */}
+                <div className="card bg-base-300 shadow-lg p-8 w-full max-w-lg mx-auto">
+                  <div className="card-body text-center space-y-4">
+                    <h1 className="text-4xl md:text-5xl font-bold flex items-center justify-center gap-4 text-primary mb-4">
+                      <Coins className="h-16 w-16 text-secondary" />
+                      Coinflip Game
+                    </h1>
+                    <p className="text-base-content text-lg leading-relaxed">
+                      Create a room and share the code with a friend, or join an existing room to play!
+                    </p>
+                  </div>
+                </div>
 
-          {/* Connection Status */}
-          <div className="mb-4 p-3 rounded text-center">
-            {isConnected ? (
-              <div className="text-green-600 bg-green-50 border border-green-200 rounded p-2">
-                ✅ Connected to Server
-              </div>
-            ) : isAutoReconnecting ? (
-              <div className="text-yellow-600 bg-yellow-50 border border-yellow-200 rounded p-2">
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
-                  <span>🔄 Connecting to Server...</span>
+                {/* Main Action Card */}
+                <div className="card bg-base-300 shadow-lg p-8 w-full max-w-md mx-auto">
+                  <div className="space-y-6 text-center">
+                    {/* Connection Status */}
+                    <div className="space-y-3">
+                      {isConnected ? (
+                        <div className="alert alert-success flex items-center justify-center gap-3 mx-auto">
+                          <Wifi className="h-5 w-5" />
+                          <span className="font-medium">Connected to Server</span>
+                        </div>
+                      ) : isAutoReconnecting ? (
+                        <div className="alert alert-warning flex flex-col items-center justify-center gap-3 mx-auto text-center">
+                          <div className="flex items-center gap-3">
+                            <span className="loading loading-spinner loading-sm"></span>
+                            <div className="text-center">
+                              <div className="font-medium">Connecting to Server...</div>
+                              <div className="text-sm opacity-75">Auto-reconnecting after leaving room</div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="alert alert-error text-center mx-auto">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="flex items-center gap-3">
+                              <WifiOff className="h-5 w-5" />
+                              <span className="font-medium">Not Connected to Server</span>
+                            </div>
+                            <button
+                              onClick={forceReconnect}
+                              className="btn btn-error btn-sm"
+                            >
+                              Click to reconnect
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {error && (
+                      <div className="alert alert-error flex items-center justify-center gap-3 mx-auto text-center">
+                        <AlertCircle className="h-5 w-5" />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-row gap-6 items-center justify-center mt-6 mb-4">
+                      <button
+                        onClick={() => setGameMode('create')}
+                        disabled={!isConnected}
+                        className={`btn w-auto px-8 py-4 h-16 text-lg gap-4 rounded-xl ${
+                          isConnected
+                            ? 'btn-primary hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200'
+                            : 'btn-disabled'
+                        }`}
+                      >
+                        <Plus className="h-7 w-7" />
+                        Create New Room
+                      </button>
+
+                      <button
+                        onClick={() => setGameMode('join')}
+                        disabled={!isConnected}
+                        className={`btn w-auto px-8 py-4 h-16 text-lg gap-4 rounded-xl ${
+                          isConnected
+                            ? 'btn-secondary hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200'
+                            : 'btn-disabled'
+                        }`}
+                      >
+                        <Users className="h-7 w-7" />
+                        Join Room
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs mt-1 text-yellow-500">
-                  Auto-reconnecting after leaving room
-                </div>
-              </div>
-            ) : (
-              <div className="text-red-600 bg-red-50 border border-red-200 rounded p-2">
-                <div>❌ Not Connected to Server</div>
-                <div className="text-xs mt-1">
+              </>
+            )}
+
+            {gameMode === 'create' && (
+              <div className="space-y-6 w-full flex flex-col items-center justify-center text-center">
+                <RoomCreation onRoomCreated={handleRoomCreated} />
+
+                {/* Display WebSocket errors */}
+                {error && (
+                  <div className="max-w-md w-full mx-auto">
+                    <div className="alert alert-error flex items-center justify-center gap-3 mx-auto text-center">
+                      <AlertCircle className="h-5 w-5" />
+                      <span>{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-center flex justify-center">
                   <button
-                    onClick={forceReconnect}
-                    className="text-blue-600 hover:text-blue-800 underline"
+                    onClick={() => setGameMode('menu')}
+                    className="btn btn-ghost gap-2"
                   >
-                    Click to reconnect
+                    ← Back to Menu
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {gameMode === 'join' && (
+              <div className="space-y-6 w-full flex flex-col items-center justify-center text-center">
+                <RoomJoining onRoomJoined={handleRoomJoined} externalError={error} />
+
+                <div className="text-center flex justify-center">
+                  <button
+                    onClick={() => setGameMode('menu')}
+                    className="btn btn-ghost gap-2"
+                  >
+                    ← Back to Menu
                   </button>
                 </div>
               </div>
             )}
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <button
-              onClick={() => setGameMode('create')}
-              disabled={!isConnected}
-              className={`w-full font-bold py-3 px-6 rounded-lg transition-colors duration-200 ${
-                isConnected
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Create New Room
-            </button>
-
-            <button
-              onClick={() => setGameMode('join')}
-              disabled={!isConnected}
-              className={`w-full font-bold py-3 px-6 rounded-lg transition-colors duration-200 ${
-                isConnected
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Join Room
-            </button>
-          </div>
-
-          <div className="mt-8 text-center text-gray-600">
-            <p className="text-sm">
-              Create a room and share the code with a friend, or join an existing room to play!
-            </p>
-          </div>
         </div>
-      )}
-
-      {gameMode === 'create' && (
-        <div>
-          <RoomCreation onRoomCreated={handleRoomCreated} />
-
-          {/* Display WebSocket errors */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded max-w-md mx-auto">
-              {error}
-            </div>
-          )}
-
-          <div className="text-center mt-4">
-            <button
-              onClick={() => setGameMode('menu')}
-              className="text-white hover:text-gray-200 underline"
-            >
-              Back to Menu
-            </button>
-          </div>
-        </div>
-      )}
-
-      {gameMode === 'join' && (
-        <div>
-          <RoomJoining onRoomJoined={handleRoomJoined} externalError={error} />
-
-          <div className="text-center mt-4">
-            <button
-              onClick={() => setGameMode('menu')}
-              className="text-white hover:text-gray-200 underline"
-            >
-              Back to Menu
-            </button>
-          </div>
-        </div>
-      )}
       </main>
     </ErrorBoundary>
   )
