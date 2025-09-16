@@ -26,6 +26,7 @@ interface UseWebSocketReturn {
   readonly createRoom: (side: 'heads' | 'tails', playerName?: string) => void;
   readonly joinRoom: (code: string, playerName?: string) => void;
   readonly disconnect: () => void;
+  readonly clearRoom: () => void; // Clear room state without disconnecting
   readonly forceReconnect: () => void; // Force reconnection if needed
   readonly forceGameStart: () => void; // Fallback manual trigger
   // startGame, flipCoin, and startNewGame removed - auto-game flow
@@ -766,6 +767,15 @@ export function useWebSocket(): UseWebSocketReturn {
   }, [sendEvent, room])
 
   /**
+   * Clear room state without disconnecting from Socket.IO
+   */
+  const clearRoom = useCallback(() => {
+    setRoom(null)
+    setError(null)
+    logInfo('Room state cleared, keeping connection alive')
+  }, [])
+
+  /**
    * Manually disconnect from Socket.IO
    */
   const disconnect = useCallback(() => {
@@ -849,6 +859,7 @@ export function useWebSocket(): UseWebSocketReturn {
     createRoom: safeCreateRoom,
     joinRoom: safeJoinRoom,
     disconnect: safeDisconnect,
+    clearRoom,
     forceReconnect,
     forceGameStart,
     // startGame, flipCoin, and startNewGame removed - auto-game flow

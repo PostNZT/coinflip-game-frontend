@@ -8,7 +8,7 @@ import GameRoom from '../components/GameRoom'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { Player, TempPlayer } from '../types/game'
-import { logError } from '../utils/logger'
+import { logError, logInfo } from '../utils/logger'
 
 /**
  * Application modes for navigation
@@ -36,7 +36,7 @@ export default function Home(): React.JSX.Element {
   const [isAutoReconnecting, setIsAutoReconnecting] = useState<boolean>(false)
 
   // WebSocket connection and game state (startGame, flipCoin removed - auto-game flow)
-  const { room, isConnected, error, createRoom, joinRoom, disconnect, forceReconnect, forceGameStart } = useWebSocket()
+  const { room, isConnected, error, createRoom, joinRoom, clearRoom, forceReconnect, forceGameStart } = useWebSocket()
 
   // Update current player when room data changes - FIXED LOGIC
   React.useEffect(() => {
@@ -138,14 +138,25 @@ export default function Home(): React.JSX.Element {
 
   /**
    * Handles leaving the current room
-   * Disconnects from WebSocket and returns to main menu
+   * Clears room state and returns to main menu
    */
   const handleLeaveRoom = (): void => {
     try {
-      disconnect() // Clean up WebSocket connection
-      setGameMode('menu')
+      // Clear room and game state
       setCurrentPlayer(null)
       setFinalGameResult(null) // Clear preserved result
+
+      // Clear room from WebSocket hook (but keep connection alive)
+      clearRoom()
+
+      // Return to menu mode
+      setGameMode('menu')
+
+      // Show success message that we left the room
+      toast.success('Left room successfully', {
+        id: 'leave-room-success',
+        duration: 2000,
+      })
     } catch (error) {
       logError('Error in handleLeaveRoom', error)
     }
@@ -160,18 +171,20 @@ export default function Home(): React.JSX.Element {
     }
   }, [room, currentPlayer, gameMode])
 
-  // Auto-reconnect when returning to menu if disconnected
+  // Auto-reconnect when returning to menu if disconnected (only if truly disconnected)
   React.useEffect(() => {
+    // Only try to reconnect if we're actually disconnected AND not auto-reconnecting already
     if (gameMode === 'menu' && !isConnected && !isAutoReconnecting) {
       setIsAutoReconnecting(true)
 
-      // Small delay to let the disconnect settle, then reconnect
+      // Small delay to let any connection issues settle, then reconnect
       const reconnectTimer = setTimeout(() => {
+        logInfo('Auto-reconnecting - connection was lost...')
         forceReconnect()
 
         toast.loading('Connecting to server...', {
           id: 'auto-reconnect-menu',
-          duration: 3000,
+          duration: 5000,
         })
       }, 1000) // 1 second delay
 
@@ -181,6 +194,11 @@ export default function Home(): React.JSX.Element {
     // Reset auto-reconnecting state when connected
     if (isConnected && isAutoReconnecting) {
       setIsAutoReconnecting(false)
+      toast.dismiss('auto-reconnect-menu')
+      toast.success('Connected to server!', {
+        id: 'auto-reconnect-success',
+        duration: 2000,
+      })
     }
 
     // Explicit return for when neither condition is met
