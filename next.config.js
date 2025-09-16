@@ -1,18 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     return [
       {
         source: '/api/game/:path*',
-        destination: 'http://localhost:8080/api/game/:path*',
+        destination: `${apiUrl}/api/game/:path*`,
       },
       {
         source: '/api/websocket/:path*',
-        destination: 'http://localhost:8080/api/websocket/:path*',
+        destination: `${apiUrl}/api/websocket/:path*`,
       },
       {
         source: '/api/docs',
-        destination: 'http://localhost:8080/api/docs',
+        destination: `${apiUrl}/api/docs`,
       },
     ]
   },
@@ -55,7 +56,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
               "img-src 'self' data: blob:",
               "font-src 'self'",
-              "connect-src 'self' ws://localhost:8080 http://localhost:8080",
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080'} ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}`,
               "frame-src 'none'",
               "object-src 'none'",
               "base-uri 'self'",
